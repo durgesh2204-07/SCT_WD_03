@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Tic-Tac-Toe · animated duel</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2639 0%, #2a3b4f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(6px);
+            border-radius: 4rem 4rem 3rem 3rem;
+            padding: 2rem 2.2rem 2.5rem;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.6), inset 0 1px 4px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s ease;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 2px;
+            font-size: 1.9rem;
+            color: #f2e9d0;
+            text-shadow: 0 4px 12px #0b0f18, 0 0 0 1px #657b93;
+            margin-top: -0.2rem;
+            margin-bottom: 0.5rem;
+            word-break: keep-all;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .status-panel {
+            background: #1d2b39;
+            border-radius: 100px;
+            padding: 0.6rem 1.8rem;
+            margin: 0.5rem 0 1.8rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: inset 0 5px 8px rgba(0,0,0,0.6), 0 2px 0 #3d5369;
+            border-bottom: 2px solid #526c84;
+        }
+
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #d4e2f0;
+        }
+
+        .turn-badge {
+            background: #0f1a24;
+            border-radius: 40px;
+            padding: 0.1rem 1rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #f5d742;
+            box-shadow: inset 0 -2px 0 #5f7b94;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .reset-btn {
+            background: #e3b574;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.4rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1f2c39;
+            box-shadow: 0 6px 0 #8f6d3b, 0 4px 12px #0b0e12;
+            cursor: pointer;
+            transition: all 0.07s ease-in;
+            letter-spacing: 0.5px;
+            border: 1px solid #fad9a0;
+        }
+
+        .reset-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 1px 0 #8f6d3b;
+        }
+
+        .reset-btn:hover {
+            background: #f3ca88;
+            transform: scale(0.97);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: #15222e;
+            padding: 14px;
+            border-radius: 48px;
+            box-shadow: inset 0 -6px 0 #354a5c, 0 12px 28px rgba(0,0,0,0.7);
+            margin-bottom: 1.2rem;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: #20313f;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.8rem;
+            font-weight: 600;
+            color: #eff3f0;
+            box-shadow: inset 0 -8px 0 #0f1a23, 0 0 0 1px #355065;
+            transition: all 0.08s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            cursor: pointer;
+            text-shadow: 0 4px 6px #0b0f12;
+            transform: scale(1);
+        }
+
+        .cell:active:not(.disabled-cell) {
+            transform: scale(0.94);
+            box-shadow: inset 0 -2px 0 #0f1a23;
+        }
+
+        .cell.disabled-cell {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+
+        .cell.win-highlight {
+            background: #d9b45b;
+            box-shadow: 0 0 20px #ffd966, inset 0 -4px 0 #8f7a3f;
+            color: #1f2a33;
+            transform: scale(1.02);
+            transition: 0.15s;
+        }
+
+        .cell.draw-highlight {
+            background: #5f7a8c;
+            box-shadow: 0 0 14px #aac0d0;
+            color: #11212b;
+        }
+
+        .cell.x-move {
+            color: #b7d7f0;
+            text-shadow: 0 0 12px #7bb3e6, 0 4px 8px #0b1118;
+        }
+
+        .cell.o-move {
+            color: #f5c9a0;
+            text-shadow: 0 0 14px #f5b87e, 0 4px 8px #14181e;
+        }
+
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: #1b2a38;
+            border-radius: 60px;
+            padding: 0.2rem;
+            box-shadow: inset 0 3px 6px #0c141d;
+            gap: 0.1rem;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #b6ccde;
+            cursor: pointer;
+            transition: 0.08s linear;
+        }
+
+        .mode-btn.active-mode {
+            background: #e3b574;
+            color: #1c2b37;
+            box-shadow: 0 2px 0 #a78149;
+        }
+
+        .mode-btn:active {
+            transform: scale(0.92);
+        }
+
+        .status-message {
+            font-size: 1.1rem;
+            background: #0f1d29;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            color: #d7e4ed;
+            font-weight: 500;
+            box-shadow: inset 0 2px 5px #051016;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            .game-container { padding: 1.2rem; }
+            .cell { font-size: 3.5rem; }
+            .turn-indicator { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>⚡ TIC–TAC–TOE ⚡</h1>
+
+    <div class="status-panel">
+        <div class="turn-indicator">
+            <span>🎯</span>
+            <span class="turn-badge" id="turnBadge">X</span>
+        </div>
+        <button class="reset-btn" id="resetBtn">⟳ new game</button>
+    </div>
+
+    <!-- board grid -->
+    <div class="board" id="board"></div>
+
+    <div class="footer-actions">
+        <div class="mode-selector">
+            <button class="mode-btn active-mode" data-mode="human" id="modeHuman">👥 2‑player</button>
+            <button class="mode-btn" data-mode="computer" id="modeComputer">🤖 vs AI</button>
+        </div>
+        <div class="status-message" id="statusMsg">▶️ your turn</div>
+    </div>
+</div>
+<script>
+    (function(){
+        // ---------- CORE STATE ----------
+        let board = Array(9).fill(null);
+        let currentPlayer = 'X';          // 'X' always starts
+        let gameActive = true;
+        let gameMode = 'human';           // 'human' or 'computer'
+        let winnerInfo = null;            // { winner, winCombo } or null
+
+        // DOM refs
+        const boardEl = document.getElementById('board');
+        const turnBadge = document.getElementById('turnBadge');
+        const statusMsg = document.getElementById('statusMsg');
+        const resetBtn = document.getElementById('resetBtn');
+        const modeHuman = document.getElementById('modeHuman');
+        const modeComputer = document.getElementById('modeComputer');
+
+        // helper to update turn badge & status
+        function updateUI() {
+            // update turn badge
+            if (!gameActive) {
+                if (winnerInfo && winnerInfo.winner) {
+                    turnBadge.textContent = winnerInfo.winner === 'X' ? '🏆 X' : '🏆 O';
+                } else if (winnerInfo && winnerInfo.winner === null) {
+                    turnBadge.textContent = '🤝';
+                } else {
+                    turnBadge.textContent = currentPlayer;
+                }
+            } else {
+                turnBadge.textContent = currentPlayer;
+            }
+
+            // update status message
+            if (!gameActive) {
+                if (winnerInfo && winnerInfo.winner) {
+                    statusMsg.textContent = `✨ ${winnerInfo.winner} wins! ✨`;
+                } else if (winnerInfo && winnerInfo.winner === null) {
+                    statusMsg.textContent = `🤝 It's a draw!`;
+                } else {
+                    statusMsg.textContent = `⏸️ paused`;
+                }
+            } else {
+                statusMsg.textContent = currentPlayer === 'X' ? '❌ X turn' : '⭕ O turn';
+            }
+
+            // sync turn badge color (just visual)
+            if (gameActive) {
+                turnBadge.style.color = currentPlayer === 'X' ? '#b7d7f0' : '#f5c9a0';
+            } else {
+                turnBadge.style.color = '#f5d742';
+            }
+        }
+
+        // render board from state
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                const mark = board[i];
+                if (mark === 'X') {
+                    cell.textContent = '✕';
+                    cell.classList.add('x-move');
+                } else if (mark === 'O') {
+                    cell.textContent = '◯';
+                    cell.classList.add('o-move');
+                } else {
+                    cell.textContent = '';
+                }
+
+                // if game inactive or cell filled -> disable pointer
+                if (!gameActive || board[i] !== null || !gameActive) {
+                    cell.classList.add('disabled-cell');
+                }
+
+                // highlight winning combo
+                if (winnerInfo && winnerInfo.winCombo && winnerInfo.winCombo.includes(i)) {
+                    cell.classList.add('win-highlight');
+                } else if (!gameActive && winnerInfo && winnerInfo.winner === null && board[i] !== null) {
+                    // draw highlight (all filled cells)
+                    cell.classList.add('draw-highlight');
+                }
+
+                // click handler
+                cell.addEventListener('click', cellClickHandler);
+                boardEl.appendChild(cell);
+            }
+            updateUI();
+        }
+
+        // ---------- CLICK HANDLER ----------
+        function cellClickHandler(e) {
+            const index = parseInt(e.currentTarget.dataset.index, 10);
+            // validate move
+            if (!gameActive) return;
+            if (board[index] !== null) return;
+            // if computer mode and it's O's turn, block human move (only X can click)
+            if (gameMode === 'computer' && currentPlayer === 'O') return;
+
+            // make move
+            makeMove(index);
+
+            // if game is still active and computer mode & currentPlayer === 'O'  => AI turn
+            if (gameActive && gameMode === 'computer' && currentPlayer === 'O') {
+                // delay AI move for better UX (200ms)
+                setTimeout(() => {
+                    if (!gameActive) return;
+                    if (currentPlayer !== 'O') return;
+                    // AI move
+                    aiMove();
+                }, 180);
+            }
+        }
+
+        // ----- make a move (core) -----
+        function makeMove(index) {
+            if (!gameActive) return false;
+            if (board[index] !== null) return false;
+
+            // place mark
+            board[index] = currentPlayer;
+
+            // check win condition
+            const win = checkWin(board, currentPlayer);
+            if (win) {
+                winnerInfo = { winner: currentPlayer, winCombo: win };
+                gameActive = false;
+                renderBoard();
+                return true;
+            }
+
+            // check draw
+            if (board.every(cell => cell !== null)) {
+                winnerInfo = { winner: null, winCombo: null };
+                gameActive = false;
+                renderBoard();
+                return true;
+            }
+
+            // switch player
+            currentPlayer = (currentPlayer === 'X' ? 'O' : 'X');
+            renderBoard();
+            return true;
+        }
+
+        // ----- AI move (simple minimax style / smart but not unbeatable) -----
+        function aiMove() {
+            if (!gameActive) return;
+            if (currentPlayer !== 'O') return;
+
+            // 1. check if AI can win
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'O';
+                    if (checkWin(board, 'O')) {
+                        board[i] = null; // revert to test
+                        // make winning move
+                        makeMove(i);
+                        return;
+                    }
+                    board[i] = null;
+                }
+            }
+
+            // 2. block player win
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'X';
+                    if (checkWin(board, 'X')) {
+                        board[i] = null;
+                        makeMove(i);
+                        return;
+                    }
+                    board[i] = null;
+                }
+            }
+
+            // 3. prefer center
+            if (board[4] === null) {
+                makeMove(4);
+                return;
+            }
+
+            // 4. prefer corners
+            const corners = [0, 2, 6, 8];
+            const shuffledCorners = corners.sort(() => Math.random() - 0.5);
+            for (let corner of shuffledCorners) {
+                if (board[corner] === null) {
+                    makeMove(corner);
+                    return;
+                }
+            }
+
+            // 5. take any remaining edge
+            const edges = [1, 3, 5, 7];
+            const shuffledEdges = edges.sort(() => Math.random() - 0.5);
+            for (let edge of shuffledEdges) {
+                if (board[edge] === null) {
+                    makeMove(edge);
+                    return;
+                }
+            }
+        }
+
+        // ----- checkWin returns array of winning indices or null -----
+        function checkWin(boardState, player) {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            for (let pattern of winPatterns) {
+                const [a,b,c] = pattern;
+                if (boardState[a] === player && boardState[b] === player && boardState[c] === player) {
+                    return pattern;
+                }
+            }
+            return null;
+        }
+
+        // ----- reset game -----
+        function resetGame() {
+            board = Array(9).fill(null);
+            currentPlayer = 'X';
+            gameActive = true;
+            winnerInfo = null;
+            renderBoard();
+            // If computer mode and AI starts? No, X always starts (human)
+            // but if computer mode, human is X, computer O
+        }
+
+        // ----- switch mode -----
+        function setMode(mode) {
+            gameMode = mode;
+            // update active class
+            if (mode === 'human') {
+                modeHuman.classList.add('active-mode');
+                modeComputer.classList.remove('active-mode');
+            } else {
+                modeComputer.classList.add('active-mode');
+                modeHuman.classList.remove('active-mode');
+            }
+            resetGame();
+            // if computer mode and it's O turn? no, X always starts.
+        }
+
+        // ----- attach events & init -----
+        function init() {
+            // reset button
+            resetBtn.addEventListener('click', resetGame);
+
+            // mode buttons
+            modeHuman.addEventListener('click', () => setMode('human'));
+            modeComputer.addEventListener('click', () => setMode('computer'));
+
+            // initial render
+            resetGame();
+        }
+
+        // call init
+        init();
+
+        // extra: if game ends and mode is computer, no extra action.
+        // also block accidental AI call after game end.
+        // patch: after human move, if AI turn we already call aiMove().
+        // but if game mode changes during AI turn? safe.
+        // also click on board while AI thinking: disabled via currentPlayer check.
+    })();
+</script>
+</body>
+</html>
